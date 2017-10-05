@@ -68,17 +68,19 @@ public class GameDaoRedis implements GameDao {
 
         Flux<Map.Entry<String, String>> entriesGame = hops.entries(buildKey(id));
 
-        return entriesGame.collect(
-                Collector.of(
-                        () -> new Game(id),
-                        this::persist,
-                        (game, game2) -> game,
-                        Function.identity()
-                )
+        return entriesGame
+                .collect(
+                        Collector.of(
+                                Game::new,
+                                (game, entry) -> persist(id, game, entry),
+                                (game, game2) -> game,
+                                Function.identity()
+                        )
         );
     }
 
-    private void persist(Game game, Map.Entry<String, String> entry) {
+    private void persist(long gameID, Game game, Map.Entry<String, String> entry) {
+        game.setGameID(gameID);
         if ("name".equals(entry.getKey()) ) {
             game.setName(entry.getValue());
 

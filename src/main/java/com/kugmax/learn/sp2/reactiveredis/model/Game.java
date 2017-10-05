@@ -8,10 +8,6 @@ public class Game {
     public Game() {
     }
 
-    public Game(long gameID) {
-        this.gameID = gameID;
-    }
-
     public Game(long gameID, String name, String description) {
         this.gameID = gameID;
         this.name = name;

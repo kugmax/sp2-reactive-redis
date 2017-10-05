@@ -18,8 +18,7 @@ public class ReactiveRedisLearnApplication {
 	}
 
 	@Bean
-	public ReactiveRedisTemplate<String, String> reactiveRedisTemplate(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory, ResourceLoader resourceLoader) {
-//        JdkSerializationRedisSerializer jdkSerializer = new JdkSerializationRedisSerializer(resourceLoader.getClassLoader());
+	public ReactiveRedisTemplate<String, String> reactiveRedisTemplate(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
         RedisSerializer stringSerializer = new StringRedisSerializer();
 
         RedisSerializationContext<String, String> serializationContext = RedisSerializationContext.newSerializationContext()

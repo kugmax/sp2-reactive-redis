@@ -23,7 +23,7 @@ public class GameController {
     }
 
     @RequestMapping(value = "/game/", method = RequestMethod.PUT)
-    public Flux<Void> save(@RequestBody Game game) {
+    public Mono<Void> save(@RequestBody Game game) {
         return gameDao.put(game);
     }
 }

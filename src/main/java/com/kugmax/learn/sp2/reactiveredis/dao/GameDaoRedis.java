@@ -38,9 +38,7 @@ public class GameDaoRedis implements GameDao {
     }
 
     @Override
-    public Flux<Void> put(Game game) {
-        log.info("### game " + game);
-
+    public Mono<Void> put(Game game) {
         ByteBuffer key = wrap( buildKey(game.getGameID()) );
 
         Map<ByteBuffer, ByteBuffer> fields = new HashMap<>();
@@ -59,7 +57,7 @@ public class GameDaoRedis implements GameDao {
                     .and(reactiveKeyCommands.expire(key, ttl))
                     .flux();
             }
-        );
+        ).then();
     }
 
     @Override

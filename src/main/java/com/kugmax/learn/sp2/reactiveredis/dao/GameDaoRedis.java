@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.ReactiveHashCommands;
+import org.springframework.data.redis.connection.ReactiveKeyCommands;
 import org.springframework.data.redis.core.ReactiveHashOperations;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -37,11 +38,8 @@ public class GameDaoRedis implements GameDao {
     }
 
     @Override
-    public void put(Game game) {
+    public Flux<Void> put(Game game) {
         log.info("### game " + game);
-
-        Mono<Boolean> booleanMono = template.opsForValue().set("Here", "use");
-        booleanMono.subscribe();
 
         ByteBuffer key = wrap( buildKey(game.getGameID()) );
 
@@ -51,15 +49,17 @@ public class GameDaoRedis implements GameDao {
 
         Duration ttl = Duration.ofSeconds(TTL_SECONDS);
 
-        Flux<?> result = template.execute( reactiveRedisConnection -> {
+        return template.execute( reactiveRedisConnection -> {
+
             ReactiveHashCommands reactiveHashCommands = reactiveRedisConnection.hashCommands();
-            reactiveHashCommands.hMSet(key, fields).subscribe();
-            reactiveRedisConnection.keyCommands().expire(key, ttl).subscribe();
-            return Flux.empty();
+            ReactiveKeyCommands reactiveKeyCommands = reactiveRedisConnection.keyCommands();
+
+            return reactiveHashCommands
+                    .hMSet(key, fields)
+                    .and(reactiveKeyCommands.expire(key, ttl))
+                    .flux();
             }
         );
-
-        result.subscribe();
     }
 
     @Override
@@ -98,8 +98,8 @@ public class GameDaoRedis implements GameDao {
             return ByteBuffer.wrap(txt.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
             log.error("Nice api spring-data ((((( " + e.getMessage(), e);
-        }
 
-        return null; //NullPointerException
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 }

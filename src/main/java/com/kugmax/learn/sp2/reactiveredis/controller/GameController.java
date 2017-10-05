@@ -4,6 +4,7 @@ import com.kugmax.learn.sp2.reactiveredis.dao.GameDao;
 import com.kugmax.learn.sp2.reactiveredis.model.Game;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -22,7 +23,7 @@ public class GameController {
     }
 
     @RequestMapping(value = "/game/", method = RequestMethod.PUT)
-    public void save(@RequestBody Game game) {
-        gameDao.put(game);
+    public Flux<Void> save(@RequestBody Game game) {
+        return gameDao.put(game);
     }
 }

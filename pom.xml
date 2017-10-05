@@ -38,6 +38,7 @@
 					<artifactId>jedis</artifactId>
 				</exclusion>
 			</exclusions>
+			<!--<version>2.0.0.RELEASE</version>-->
 		</dependency>
 		<dependency>
 			<groupId>io.lettuce</groupId>
@@ -63,10 +64,17 @@
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>org.springframework.boot</groupId>-->
+			<!--<artifactId>spring-boot-configuration-processor</artifactId>-->
+			<!--<optional>true</optional>-->
+		<!--</dependency>-->
+
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-configuration-processor</artifactId>
-			<optional>true</optional>
+			<groupId>com.github.kstyrc</groupId>
+			<artifactId>embedded-redis</artifactId>
+			<version>0.6</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -80,6 +88,15 @@
 	</build>
 
 	<repositories>
+		<repository>
+        	<id>spring-libs-release</id>
+        	<name>Spring Releases</name>
+        	<url>https://repo.spring.io/libs-release</url>
+        	<snapshots>
+            	<enabled>false</enabled>
+        	</snapshots>
+    	</repository>
+
 		<repository>
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>

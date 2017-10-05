@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.ReactiveHashCommands;
+import org.springframework.data.redis.core.ReactiveHashOperations;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -28,10 +29,10 @@ public class GameDaoRedis implements GameDao {
     @Value("${dao.game.redis.ttl.seconds}")
     public long TTL_SECONDS;
 
-    private ReactiveRedisTemplate template;
+    private ReactiveRedisTemplate<String, String> template;
 
     @Autowired
-    public GameDaoRedis(ReactiveRedisTemplate template) {
+    public GameDaoRedis(ReactiveRedisTemplate<String, String> template) {
         this.template = template;
     }
 
@@ -39,7 +40,10 @@ public class GameDaoRedis implements GameDao {
     public void put(Game game) {
         log.info("### game " + game);
 
-        ByteBuffer key = buildKey(game.getGameID());
+        Mono<Boolean> booleanMono = template.opsForValue().set("Here", "use");
+        booleanMono.subscribe();
+
+        ByteBuffer key = wrap( buildKey(game.getGameID()) );
 
         Map<ByteBuffer, ByteBuffer> fields = new HashMap<>();
         fields.put( wrap("name"), wrap(game.getName()) );
@@ -49,8 +53,8 @@ public class GameDaoRedis implements GameDao {
 
         Flux<?> result = template.execute( reactiveRedisConnection -> {
             ReactiveHashCommands reactiveHashCommands = reactiveRedisConnection.hashCommands();
-            reactiveHashCommands.hMSet(key, fields);
-            reactiveRedisConnection.keyCommands().expire(key, ttl);
+            reactiveHashCommands.hMSet(key, fields).subscribe();
+            reactiveRedisConnection.keyCommands().expire(key, ttl).subscribe();
             return Flux.empty();
             }
         );
@@ -60,11 +64,13 @@ public class GameDaoRedis implements GameDao {
 
     @Override
     public Mono<Game> get(long id) {
-        Flux<Map.Entry> entriesGame = template.opsForHash().entries(buildKey(id));
+        ReactiveHashOperations<String, String, String> hops = template.opsForHash();
+
+        Flux<Map.Entry<String, String>> entriesGame = hops.entries(buildKey(id));
 
         return entriesGame.collect(
                 Collector.of(
-                        Game::new,
+                        () -> new Game(id),
                         this::persist,
                         (game, game2) -> game,
                         Function.identity()
@@ -83,8 +89,8 @@ public class GameDaoRedis implements GameDao {
         }
     }
 
-    private ByteBuffer buildKey(long id) {
-        return wrap (BASE_KEY + String.valueOf(id));
+    private String buildKey(long id) {
+        return BASE_KEY + String.valueOf(id);
     }
 
     private ByteBuffer wrap(String txt) {
